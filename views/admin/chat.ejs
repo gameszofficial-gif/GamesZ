@@ -1,0 +1,171 @@
+<%- include('partials/header', { pageTitle: 'Live Chat', active: 'chat' }) %>
+
+<div class="admin-page-header">
+  <h1>💬 Live Chat Panel</h1>
+  <span class="online-indicator">🟢 Online</span>
+</div>
+
+<div class="admin-chat-layout">
+  <!-- Room List -->
+  <div class="admin-chat-sidebar">
+    <h3>Active Conversations</h3>
+    <div id="roomList" class="room-list">
+      <div class="no-chats">No active chats yet.<br>Customers will appear here after purchase.</div>
+    </div>
+  </div>
+
+  <!-- Chat Window -->
+  <div class="admin-chat-main">
+    <div id="noChatSelected" class="no-chat-selected">
+      <div style="font-size:48px;margin-bottom:12px">💬</div>
+      <p>Select a conversation from the left to start chatting</p>
+    </div>
+    <div id="chatArea" style="display:none;height:100%;display:flex;flex-direction:column;">
+      <div class="admin-chat-header" id="adminChatHeader">
+        <span id="chatCustomerName">Customer</span>
+        <small id="chatRoomIdLabel" style="color:#aaa;margin-left:8px"></small>
+      </div>
+      <div class="chat-messages" id="adminMessages" style="flex:1;overflow-y:auto;"></div>
+      <div class="chat-input-area">
+        <input type="text" id="adminInput" placeholder="Type your reply as Gamesz Support...">
+        <button id="adminSendBtn">Send ↑</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  const socket = io();
+  let activeRoomId = null;
+  const rooms = {};
+
+  socket.emit('admin:join');
+
+  // Load all existing rooms
+  socket.on('admin:rooms', (roomData) => {
+    roomData.forEach(r => {
+      rooms[r.roomId] = r.messages;
+      addRoomToList(r.roomId, 'Customer', r.messages.length);
+    });
+    // Check URL hash for direct link
+    const hash = window.location.hash.replace('#', '');
+    if (hash) openRoom(hash);
+  });
+
+  // New customer connected
+  socket.on('admin:new_customer', ({ roomId, username }) => {
+    rooms[roomId] = rooms[roomId] || [];
+    addRoomToList(roomId, username, 0, true);
+  });
+
+  // Customer sent a message
+  socket.on('admin:customer_message', ({ roomId, msg }) => {
+    if (!rooms[roomId]) rooms[roomId] = [];
+    rooms[roomId].push(msg);
+    // Update room list badge
+    const roomEl = document.getElementById('room-' + roomId);
+    if (roomEl) {
+      roomEl.classList.add('has-new');
+      roomEl.querySelector('.room-preview').textContent = msg.text.substring(0, 40);
+    }
+    // If this room is active, show message
+    if (activeRoomId === roomId) {
+      renderMessage(msg);
+      scrollBottom();
+    }
+  });
+
+  // Message from this chat (could be our own send confirmation)
+  socket.on('chat:message', (msg) => {
+    if (msg.from === 'support' && activeRoomId) {
+      renderMessage(msg);
+      scrollBottom();
+    }
+  });
+
+  function addRoomToList(roomId, username, msgCount, isNew = false) {
+    const existing = document.getElementById('room-' + roomId);
+    if (existing) return;
+    const noChats = document.querySelector('.no-chats');
+    if (noChats) noChats.remove();
+    const div = document.createElement('div');
+    div.className = 'room-item' + (isNew ? ' has-new' : '');
+    div.id = 'room-' + roomId;
+    div.innerHTML = `
+      <div class="room-avatar">${username[0].toUpperCase()}</div>
+      <div class="room-details">
+        <span class="room-name">${escapeHtml(username)}</span>
+        <span class="room-preview">${msgCount} messages</span>
+      </div>
+      ${isNew ? '<span class="new-badge">NEW</span>' : ''}
+    `;
+    div.addEventListener('click', () => openRoom(roomId, username));
+    document.getElementById('roomList').appendChild(div);
+  }
+
+  function openRoom(roomId, username) {
+    activeRoomId = roomId;
+    socket.emit('admin:open_room', { roomId });
+
+    document.getElementById('noChatSelected').style.display = 'none';
+    document.getElementById('chatArea').style.display = 'flex';
+    document.getElementById('adminChatHeader').style.display = 'flex';
+    document.getElementById('chatCustomerName').textContent = username || 'Customer';
+    document.getElementById('chatRoomIdLabel').textContent = roomId.substring(0,8) + '...';
+
+    // Highlight active room
+    document.querySelectorAll('.room-item').forEach(r => r.classList.remove('active'));
+    const activeEl = document.getElementById('room-' + roomId);
+    if (activeEl) { activeEl.classList.remove('has-new'); activeEl.classList.add('active'); }
+
+    // Clear and render messages
+    const msgEl = document.getElementById('adminMessages');
+    msgEl.innerHTML = '';
+    if (rooms[roomId]) rooms[roomId].forEach(renderMessage);
+    scrollBottom();
+  }
+
+  function renderMessage(msg) {
+    const isSupport = msg.from === 'support';
+    const msgEl = document.getElementById('adminMessages');
+    const div = document.createElement('div');
+    div.className = `chat-message ${isSupport ? 'support' : 'customer'}`;
+    const time = new Date(msg.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    div.innerHTML = `
+      ${!isSupport ? '<div class="msg-avatar">' + escapeHtml((msg.name || 'C')[0].toUpperCase()) + '</div>' : ''}
+      <div class="msg-bubble">
+        <span class="msg-name">${isSupport ? '🛡️ You (Support)' : escapeHtml(msg.name || 'Customer')}</span>
+        <p>${escapeHtml(msg.text)}</p>
+        <span class="msg-time">${time}</span>
+      </div>
+      ${isSupport ? '<div class="msg-avatar" style="background:#1a3a6e;">S</div>' : ''}
+    `;
+    msgEl.appendChild(div);
+  }
+
+  document.getElementById('adminSendBtn').addEventListener('click', sendAdminMsg);
+  document.getElementById('adminInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') sendAdminMsg();
+  });
+
+  function sendAdminMsg() {
+    if (!activeRoomId) return;
+    const input = document.getElementById('adminInput');
+    const text = input.value.trim();
+    if (!text) return;
+    socket.emit('admin:message', { roomId: activeRoomId, message: text });
+    input.value = '';
+  }
+
+  function scrollBottom() {
+    const el = document.getElementById('adminMessages');
+    if (el) el.scrollTop = el.scrollHeight;
+  }
+
+  function escapeHtml(text) {
+    return String(text).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+</script>
+
+<%- include('partials/footer') %>

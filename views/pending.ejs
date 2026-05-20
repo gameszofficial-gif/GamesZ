@@ -1,0 +1,52 @@
+<%- include('partials/header', { title: 'Payment Pending', user }) %>
+
+<section class="pending-section">
+  <div class="pending-card">
+    <div class="pending-icon">⏳</div>
+    <h1>Payment Under Review</h1>
+    <p class="pending-sub">We've received your payment screenshot and are verifying it. This usually takes just a few minutes.</p>
+
+    <div class="pending-order-info">
+      <div class="summary-row"><span>Product</span><strong><%= order.productName %></strong></div>
+      <div class="summary-row"><span>Amount</span><strong style="color:var(--accent)">₹<%= order.amount %></strong></div>
+      <div class="summary-row"><span>Status</span><strong style="color:#f59e0b">🔄 Verifying Payment</strong></div>
+    </div>
+
+    <div class="pending-steps">
+      <div class="pstep done">✓ Order placed</div>
+      <div class="pstep done">✓ Screenshot submitted</div>
+      <div class="pstep active">⏳ Admin verifying...</div>
+      <div class="pstep">💬 Chat opens</div>
+      <div class="pstep">🎮 Credentials delivered</div>
+    </div>
+
+    <div class="pending-spinner">
+      <div class="spinner-ring"></div>
+    </div>
+    <p style="color:var(--text-muted);font-size:14px;margin-top:8px" id="statusText">Checking status...</p>
+
+    <a href="/" class="back-btn" style="margin-top:28px;display:inline-block">← Back to Store</a>
+  </div>
+</section>
+
+<script>
+  const orderId = '<%= order._id %>';
+
+  async function checkStatus() {
+    const res = await fetch('/orders/check-status/' + orderId);
+    const data = await res.json();
+    if (data.status === 'paid' || data.status === 'delivered') {
+      document.getElementById('statusText').textContent = '✅ Payment confirmed! Redirecting to chat...';
+      setTimeout(() => { window.location = '/orders/chat/' + data.chatRoomId; }, 1200);
+    } else if (data.status === 'cancelled') {
+      document.getElementById('statusText').textContent = '❌ Order cancelled. Contact support.';
+    } else {
+      document.getElementById('statusText').textContent = 'Still verifying... checking again in 5s';
+      setTimeout(checkStatus, 5000);
+    }
+  }
+
+  checkStatus();
+</script>
+
+<%- include('partials/footer') %>

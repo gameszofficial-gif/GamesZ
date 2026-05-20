@@ -1,0 +1,80 @@
+<%- include('partials/header', { title: product.name, user }) %>
+
+<section class="product-detail-section">
+  <div class="container">
+    <a href="/" class="back-btn">← Back to Store</a>
+    <div class="product-detail">
+      <div class="pd-image">
+        <img src="<%= product.image %>" alt="<%= product.name %>" onerror="this.src='/images/default-game.png'">
+        <% if (product.badge) { %><span class="badge badge-<%= product.badge.toLowerCase() %>"><%= product.badge %></span><% } %>
+      </div>
+      <div class="pd-info">
+        <div class="pd-platform"><%= product.platform %> • <%= product.category.toUpperCase() %></div>
+        <h1><%= product.name %></h1>
+        <p class="pd-description"><%= product.description %></p>
+        <div class="pd-price-block">
+          <% if (product.originalPrice) { %>
+            <span class="original-price">₹<%= product.originalPrice %></span>
+            <span class="discount-badge"><%- Math.round((1 - product.price/product.originalPrice)*100) %>% OFF</span>
+          <% } %>
+          <div class="pd-price">₹<%= product.price %></div>
+        </div>
+        <div class="pd-stock <%= product.stock > 0 ? 'in-stock' : 'out-stock' %>">
+          <%= product.stock > 0 ? '✓ In Stock — Ready for Delivery' : '✗ Out of Stock' %>
+        </div>
+        <div class="pd-delivery-info">
+          <div class="delivery-step">
+            <span class="step-num">1</span>
+            <span>Click Buy Now &amp; pay via UPI (GPay, PhonePe, Paytm etc.)</span>
+          </div>
+          <div class="delivery-step">
+            <span class="step-num">2</span>
+            <span>Upload your payment screenshot as proof</span>
+          </div>
+          <div class="delivery-step">
+            <span class="step-num">3</span>
+            <span>We verify &amp; deliver your credentials via Live Chat</span>
+          </div>
+        </div>
+        <% if (product.stock > 0) { %>
+          <button class="btn-buy" id="buyBtn">
+            🛒 Buy Now — ₹<%= product.price %>
+          </button>
+        <% } else { %>
+          <button class="btn-buy disabled" disabled>Out of Stock</button>
+        <% } %>
+        <div class="secure-note">💳 Pay directly via UPI • No card details needed</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  const isLoggedIn = <%= typeof user !== 'undefined' && user ? 'true' : 'false' %>;
+
+  document.getElementById('buyBtn')?.addEventListener('click', async () => {
+    if (!isLoggedIn) {
+      window.location = '/auth/login?redirect=/product/<%= product._id %>';
+      return;
+    }
+    const btn = document.getElementById('buyBtn');
+    btn.textContent = 'Creating order...';
+    btn.disabled = true;
+
+    const res = await fetch('/orders/initiate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ productId: '<%= product._id %>' })
+    });
+    const data = await res.json();
+    if (data.success) {
+      window.location = '/orders/pay/' + data.orderId;
+    } else {
+      alert(data.message || 'Failed to create order');
+      btn.textContent = '🛒 Buy Now — ₹<%= product.price %>';
+      btn.disabled = false;
+    }
+  });
+</script>
+
+<%- include('partials/footer') %>

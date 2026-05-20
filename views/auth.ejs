@@ -1,0 +1,48 @@
+<%- include('partials/header', { title: mode === 'login' ? 'Login' : 'Register', user: null }) %>
+
+<section class="auth-section">
+  <div class="auth-card">
+    <div class="auth-logo"><span class="logo-g">G</span>AMESZ</div>
+    <h2><%= mode === 'login' ? 'Welcome Back' : 'Create Account' %></h2>
+    <p class="auth-sub"><%= mode === 'login' ? 'Login to purchase games instantly' : 'Join thousands of gamers today' %></p>
+
+    <% if (error) { %>
+      <div class="error-banner">⚠️ <%= error %></div>
+    <% } %>
+
+    <form method="POST" action="/auth/<%= mode %>" class="auth-form">
+      <input type="hidden" name="redirect" value="<%= redirect %>">
+
+      <% if (mode === 'register') { %>
+        <div class="form-group">
+          <label>Username</label>
+          <input type="text" name="username" placeholder="Choose a username" required>
+        </div>
+      <% } %>
+
+      <div class="form-group">
+        <label>Email Address</label>
+        <input type="email" name="email" placeholder="your@email.com" required>
+      </div>
+
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" name="password" placeholder="Enter password" required minlength="6">
+      </div>
+
+      <button type="submit" class="btn-auth">
+        <%= mode === 'login' ? '🚀 Login' : '🎮 Create Account' %>
+      </button>
+    </form>
+
+    <div class="auth-switch">
+      <% if (mode === 'login') { %>
+        Don't have an account? <a href="/auth/register?redirect=<%= redirect %>">Register here</a>
+      <% } else { %>
+        Already have an account? <a href="/auth/login?redirect=<%= redirect %>">Login here</a>
+      <% } %>
+    </div>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

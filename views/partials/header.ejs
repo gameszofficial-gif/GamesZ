@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= typeof title !== 'undefined' ? title : 'Gamesz' %> — Premium Game Store</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="/" class="logo">
+      <span class="logo-g">G</span>AMESZ
+    </a>
+    <div class="nav-links">
+      <a href="/?category=steam">Steam</a>
+      <a href="/?category=account">Accounts</a>
+      <a href="/?category=giftcard">Gift Cards</a>
+      <a href="/?category=other">Other</a>
+    </div>
+    <div class="nav-auth">
+      <% if (typeof user !== 'undefined' && user) { %>
+        <a href="/dashboard" class="btn-nav">👤 <%= user.username %></a>
+        <a href="/auth/logout" class="btn-nav btn-outline">Logout</a>
+      <% } else { %>
+        <a href="/auth/login" class="btn-nav">Login</a>
+        <a href="/auth/register" class="btn-nav btn-primary">Register</a>
+      <% } %>
+    </div>
+    <button class="hamburger" id="hamburger">&#9776;</button>
+  </div>
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="/?category=steam">Steam Games</a>
+    <a href="/?category=account">Accounts</a>
+    <a href="/?category=giftcard">Gift Cards</a>
+    <% if (typeof user !== 'undefined' && user) { %>
+      <a href="/dashboard">Dashboard</a>
+      <a href="/auth/logout">Logout</a>
+    <% } else { %>
+      <a href="/auth/login">Login</a>
+      <a href="/auth/register">Register</a>
+    <% } %>
+  </div>
+</nav>

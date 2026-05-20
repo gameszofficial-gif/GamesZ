@@ -1,0 +1,111 @@
+<%- include('partials/header', { pageTitle: 'Orders', active: 'orders' }) %>
+
+<div class="admin-page-header">
+  <h1>📦 Orders</h1>
+  <span style="color:#64748b;font-size:14px"><%= orders.length %> total orders</span>
+</div>
+
+<!-- Payment Proof Review section (payment_submitted ones first) -->
+<% const pending = orders.filter(o => o.status === 'payment_submitted'); %>
+<% if (pending.length > 0) { %>
+<div class="admin-section" style="border-color:rgba(245,158,11,0.4);box-shadow:0 0 20px rgba(245,158,11,0.07)">
+  <h2 style="color:#f59e0b">🔔 Awaiting Your Approval (<%= pending.length %>)</h2>
+  <div class="proof-cards">
+    <% pending.forEach(order => { %>
+    <div class="proof-card">
+      <div class="proof-header">
+        <div>
+          <strong style="color:#e2e8f0"><%= order.user?.username || 'N/A' %></strong>
+          <small style="color:#64748b;margin-left:8px"><%= order.user?.email || '' %></small>
+        </div>
+        <span class="status-badge status-pending">⏳ Pending</span>
+      </div>
+      <div class="proof-body">
+        <div class="proof-meta">
+          <div><span>Product:</span> <strong><%= order.productName %></strong></div>
+          <div><span>Amount:</span> <strong style="color:#60a5fa">₹<%= order.amount %></strong></div>
+          <div><span>UTR / Txn ID:</span> <strong><%= order.upiTransactionId || 'Not provided' %></strong></div>
+          <div><span>Submitted:</span> <strong><%= new Date(order.createdAt).toLocaleString() %></strong></div>
+        </div>
+        <% if (order.screenshotPath) { %>
+        <div class="proof-screenshot">
+          <a href="<%= order.screenshotPath %>" target="_blank">
+            <img src="<%= order.screenshotPath %>" alt="Payment screenshot">
+            <div class="screenshot-overlay">🔍 View Full</div>
+          </a>
+        </div>
+        <% } else { %>
+        <div class="proof-screenshot no-ss">No screenshot uploaded</div>
+        <% } %>
+      </div>
+      <div class="proof-actions">
+        <form method="POST" action="/admin/orders/status/<%= order._id %>" style="display:flex;gap:8px;flex:1">
+          <input type="hidden" name="status" value="paid">
+          <button type="submit" class="btn-approve">✅ Approve & Open Chat</button>
+        </form>
+        <form method="POST" action="/admin/orders/status/<%= order._id %>">
+          <input type="hidden" name="status" value="cancelled">
+          <button type="submit" class="btn-reject" onclick="return confirm('Reject this payment?')">❌ Reject</button>
+        </form>
+      </div>
+    </div>
+    <% }) %>
+  </div>
+</div>
+<% } %>
+
+<!-- All Orders Table -->
+<div class="admin-section">
+  <h2>All Orders</h2>
+  <table class="admin-table">
+    <thead>
+      <tr>
+        <th>Customer</th>
+        <th>Product</th>
+        <th>Amount</th>
+        <th>UTR / Txn</th>
+        <th>Screenshot</th>
+        <th>Status</th>
+        <th>Date</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% orders.forEach(order => { %>
+      <tr>
+        <td>
+          <strong><%= order.user?.username || 'N/A' %></strong><br>
+          <small style="color:#64748b"><%= order.user?.email || '' %></small>
+        </td>
+        <td><%= order.productName %></td>
+        <td>₹<%= order.amount %></td>
+        <td><small style="color:#94a3b8"><%= order.upiTransactionId || '—' %></small></td>
+        <td>
+          <% if (order.screenshotPath) { %>
+            <a href="<%= order.screenshotPath %>" target="_blank" class="btn-edit" style="font-size:11px">📸 View</a>
+          <% } else { %>—<% } %>
+        </td>
+        <td><span class="status-badge status-<%= order.status.replace('_','-') %>"><%= order.status.replace('_',' ') %></span></td>
+        <td><%= new Date(order.createdAt).toLocaleDateString() %></td>
+        <td class="actions-cell">
+          <form method="POST" action="/admin/orders/status/<%= order._id %>" style="display:flex;gap:4px;flex-wrap:wrap">
+            <select name="status" style="padding:4px 6px;background:#1a2340;color:#fff;border:1px solid #2a3a6e;border-radius:4px;font-size:12px">
+              <option value="awaiting_payment" <%= order.status === 'awaiting_payment' ? 'selected' : '' %>>Awaiting Payment</option>
+              <option value="payment_submitted" <%= order.status === 'payment_submitted' ? 'selected' : '' %>>Submitted</option>
+              <option value="paid" <%= order.status === 'paid' ? 'selected' : '' %>>Paid ✓</option>
+              <option value="delivered" <%= order.status === 'delivered' ? 'selected' : '' %>>Delivered</option>
+              <option value="cancelled" <%= order.status === 'cancelled' ? 'selected' : '' %>>Cancelled</option>
+            </select>
+            <button type="submit" class="btn-edit" style="font-size:12px;padding:4px 8px">Set</button>
+          </form>
+          <% if (order.chatRoomId && (order.status === 'paid' || order.status === 'delivered')) { %>
+            <a href="/admin/chat#<%= order.chatRoomId %>" class="btn-chat-small" style="margin-top:4px">💬 Chat</a>
+          <% } %>
+        </td>
+      </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+
+<%- include('partials/footer') %>

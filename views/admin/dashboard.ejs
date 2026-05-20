@@ -1,0 +1,62 @@
+<%- include('partials/header', { pageTitle: 'Dashboard', active: 'dashboard' }) %>
+
+<div class="admin-page-header">
+  <h1>📊 Dashboard</h1>
+</div>
+
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-icon">🎮</div>
+    <div class="stat-value"><%= stats.products %></div>
+    <div class="stat-label">Total Products</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon">📦</div>
+    <div class="stat-value"><%= stats.orders %></div>
+    <div class="stat-label">Total Orders</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon">👥</div>
+    <div class="stat-value"><%= stats.users %></div>
+    <div class="stat-label">Registered Users</div>
+  </div>
+  <div class="stat-card highlight">
+    <div class="stat-icon">💰</div>
+    <div class="stat-value">₹<%= stats.revenue.toLocaleString() %></div>
+    <div class="stat-label">Total Revenue</div>
+  </div>
+</div>
+
+<div class="admin-section">
+  <h2>Recent Orders</h2>
+  <table class="admin-table">
+    <thead>
+      <tr>
+        <th>Customer</th>
+        <th>Product</th>
+        <th>Amount</th>
+        <th>Status</th>
+        <th>Date</th>
+        <th>Chat</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% recentOrders.forEach(order => { %>
+      <tr>
+        <td><%= order.user?.username || 'N/A' %></td>
+        <td><%= order.productName %></td>
+        <td>₹<%= order.amount %></td>
+        <td><span class="status-badge status-<%= order.status %>"><%= order.status %></span></td>
+        <td><%= new Date(order.createdAt).toLocaleDateString() %></td>
+        <td>
+          <% if (order.chatRoomId) { %>
+            <a href="/admin/chat#<%= order.chatRoomId %>" class="btn-chat-small">💬</a>
+          <% } else { %>—<% } %>
+        </td>
+      </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+
+<%- include('partials/footer') %>

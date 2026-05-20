@@ -1,0 +1,86 @@
+<%- include('partials/header', { title: 'Store', user }) %>
+
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <div class="hero-badge">🎮 DIGITAL GAME STORE</div>
+    <h1>Level Up Your <span class="gradient-text">Gaming</span> Experience</h1>
+    <p>Instant delivery • Premium accounts • Best prices</p>
+    <div class="hero-search">
+      <form action="/" method="GET">
+        <input type="text" name="search" placeholder="Search games, accounts..." value="<%= search %>">
+        <button type="submit">🔍 Search</button>
+      </form>
+    </div>
+    <div class="hero-stats">
+      <div><span>500+</span> Games</div>
+      <div><span>24/7</span> Support</div>
+      <div><span>100%</span> Secure</div>
+    </div>
+  </div>
+</section>
+
+<!-- Category Tabs -->
+<section class="store-section">
+  <div class="container">
+    <div class="category-tabs">
+      <a href="/" class="tab <%= category === 'all' ? 'active' : '' %>">All Products</a>
+      <a href="/?category=steam" class="tab <%= category === 'steam' ? 'active' : '' %>">🎮 Steam</a>
+      <a href="/?category=account" class="tab <%= category === 'account' ? 'active' : '' %>">👤 Accounts</a>
+      <a href="/?category=giftcard" class="tab <%= category === 'giftcard' ? 'active' : '' %>">🎁 Gift Cards</a>
+      <a href="/?category=other" class="tab <%= category === 'other' ? 'active' : '' %>">⚡ Other</a>
+    </div>
+
+    <% if (products.length === 0) { %>
+      <div class="empty-state">
+        <div style="font-size:64px;margin-bottom:16px">🎮</div>
+        <h3>No products found</h3>
+        <p>Check back soon — new games added daily!</p>
+      </div>
+    <% } else { %>
+    <div class="products-grid">
+      <% products.forEach(product => { %>
+      <div class="product-card" onclick="window.location='/product/<%= product._id %>'">
+        <div class="product-image">
+          <img src="<%= product.image %>" alt="<%= product.name %>" onerror="this.src='/images/default-game.png'">
+          <% if (product.badge) { %><span class="badge badge-<%= product.badge.toLowerCase() %>"><%= product.badge %></span><% } %>
+          <div class="product-overlay">
+            <button class="btn-view" onclick="event.stopPropagation();window.location='/product/<%= product._id %>'">View Details</button>
+          </div>
+        </div>
+        <div class="product-info">
+          <div class="product-platform"><%= product.platform %></div>
+          <h3><%= product.name %></h3>
+          <p class="product-desc"><%= product.description.substring(0, 80) %>...</p>
+          <div class="product-footer">
+            <div class="price-block">
+              <% if (product.originalPrice) { %>
+                <span class="original-price">₹<%= product.originalPrice %></span>
+              <% } %>
+              <span class="price">₹<%= product.price %></span>
+            </div>
+            <span class="stock-badge <%= product.stock > 0 ? 'in-stock' : 'out-stock' %>">
+              <%= product.stock > 0 ? '✓ In Stock' : '✗ Sold Out' %>
+            </span>
+          </div>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+    <% } %>
+  </div>
+</section>
+
+<!-- Trust Strip -->
+<section class="trust-strip">
+  <div class="container">
+    <div class="trust-items">
+      <div class="trust-item">🔒 <span>Secure Payments via Razorpay</span></div>
+      <div class="trust-item">⚡ <span>Instant Delivery via Live Chat</span></div>
+      <div class="trust-item">🎮 <span>500+ Premium Games</span></div>
+      <div class="trust-item">💬 <span>24/7 Live Support</span></div>
+    </div>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

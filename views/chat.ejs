@@ -1,0 +1,95 @@
+<%- include('partials/header', { title: 'Live Chat', user }) %>
+
+<section class="chat-section">
+  <div class="chat-wrapper">
+    <div class="chat-header">
+      <div class="chat-brand">
+        <div class="support-avatar">🎮</div>
+        <div>
+          <h3>Gamesz Support</h3>
+          <span class="online-dot"></span> <small>Online — Ready to deliver</small>
+        </div>
+      </div>
+      <div class="order-badge">
+        Order: <strong><%= order.productName %></strong> • ₹<%= order.amount %>
+      </div>
+    </div>
+
+    <div class="chat-messages" id="chatMessages">
+      <div class="chat-message support">
+        <div class="msg-avatar">G</div>
+        <div class="msg-bubble">
+          <span class="msg-name">Gamesz Support</span>
+          <p>👋 Hello <strong><%= user.username %></strong>! Your payment for <strong><%= order.productName %></strong> has been confirmed. Please wait while we prepare your credentials...</p>
+          <span class="msg-time">Just now</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="chat-input-area">
+      <input type="text" id="chatInput" placeholder="Type your message..." autocomplete="off">
+      <button id="sendBtn">Send ↑</button>
+    </div>
+  </div>
+</section>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  const socket = io();
+  const roomId = '<%= order.chatRoomId %>';
+  const username = '<%= user.username %>';
+  const messagesEl = document.getElementById('chatMessages');
+
+  socket.emit('customer:join', { roomId, username });
+
+  socket.on('chat:history', (messages) => {
+    messages.forEach(addMessage);
+    scrollBottom();
+  });
+
+  socket.on('chat:message', (msg) => {
+    addMessage(msg);
+    scrollBottom();
+  });
+
+  document.getElementById('sendBtn').addEventListener('click', sendMsg);
+  document.getElementById('chatInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') sendMsg();
+  });
+
+  function sendMsg() {
+    const input = document.getElementById('chatInput');
+    const text = input.value.trim();
+    if (!text) return;
+    socket.emit('customer:message', { roomId, message: text, username });
+    input.value = '';
+  }
+
+  function addMessage(msg) {
+    const isSupport = msg.from === 'support';
+    const isCustomer = msg.from === 'customer';
+    const div = document.createElement('div');
+    div.className = `chat-message ${isSupport ? 'support' : 'customer'}`;
+    const time = new Date(msg.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    div.innerHTML = `
+      ${isSupport ? '<div class="msg-avatar">G</div>' : ''}
+      <div class="msg-bubble">
+        ${isSupport ? `<span class="msg-name">Gamesz Support</span>` : ''}
+        <p>${escapeHtml(msg.text)}</p>
+        <span class="msg-time">${time}</span>
+      </div>
+      ${!isSupport ? '<div class="msg-avatar user-av">' + escapeHtml(username[0].toUpperCase()) + '</div>' : ''}
+    `;
+    messagesEl.appendChild(div);
+  }
+
+  function scrollBottom() {
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
+  function escapeHtml(text) {
+    return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+</script>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,48 @@
+<%- include('partials/header', { title: 'Dashboard', user }) %>
+
+<section class="dashboard-section">
+  <div class="container">
+    <div class="dashboard-header">
+      <h1>👤 My Dashboard</h1>
+      <p>Welcome back, <strong><%= user.username %></strong></p>
+    </div>
+
+    <div class="orders-table-wrapper">
+      <h2>My Orders</h2>
+      <% if (orders.length === 0) { %>
+        <div class="empty-state">
+          <p>No orders yet. <a href="/">Browse the store</a></p>
+        </div>
+      <% } else { %>
+      <table class="orders-table">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Amount</th>
+            <th>Status</th>
+            <th>Date</th>
+            <th>Support</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% orders.forEach(order => { %>
+          <tr>
+            <td><%= order.productName %></td>
+            <td>₹<%= order.amount %></td>
+            <td><span class="status-badge status-<%= order.status %>"><%= order.status %></span></td>
+            <td><%= new Date(order.createdAt).toLocaleDateString() %></td>
+            <td>
+              <% if (order.chatRoomId && order.status !== 'cancelled') { %>
+                <a href="/orders/chat/<%= order.chatRoomId %>" class="btn-chat-small">💬 Chat</a>
+              <% } else { %>—<% } %>
+            </td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+      <% } %>
+    </div>
+  </div>
+</section>
+
+<%- include('partials/footer') %>
