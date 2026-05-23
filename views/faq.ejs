@@ -1,0 +1,15 @@
+<%- include('partials/header', { title: 'FAQ' }) %>
+<section class="faq-section container">
+  <h1>❓ Frequently Asked Questions</h1>
+  <% if (!faq || faq.length === 0) { %>
+    <div class="empty-state"><p>No FAQs yet. Check back soon!</p></div>
+  <% } else { %>
+    <% faq.forEach(item => { %>
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaq(this)"><%= item.q %><span class="faq-arrow">▼</span></div>
+      <div class="faq-answer"><%= item.a %></div>
+    </div>
+    <% }) %>
+  <% } %>
+</section>
+<%- include('partials/footer') %>

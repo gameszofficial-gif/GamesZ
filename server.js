@@ -13,7 +13,7 @@ const io = new Server(server, {
 });
 
 // DB Connect
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/gamesz')
+mongoose.connect(process.env.MONGODB_URI || process.env.MONGO_URI)
   .then(() => console.log('✅ MongoDB connected'))
   .catch(err => console.log('❌ DB Error:', err));
 
@@ -109,5 +109,5 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {});
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 4000;
 server.listen(PORT, () => console.log(`🚀 Gamesz running at http://localhost:${PORT}`));

@@ -1,0 +1,36 @@
+<%- include('partials/header', { title: 'Cart' }) %>
+<section class="cart-section">
+  <div class="container">
+    <h1 class="page-title">🛒 My Cart</h1>
+    <% if (!items || items.length === 0) { %>
+      <div class="empty-state"><div style="font-size:64px">🛒</div><h3>Your cart is empty</h3><p><a href="/">Browse the store</a></p></div>
+    <% } else { %>
+    <div class="cart-layout">
+      <div class="cart-items">
+        <% items.forEach(item => { %>
+        <% if (item.product) { %>
+        <div class="cart-item" id="cart-item-<%= item.product._id %>">
+          <img class="cart-item-img" src="<%= item.product.image %>" onerror="this.src='/images/default-game.png'">
+          <div class="cart-item-info">
+            <h3><%= item.product.name %></h3>
+            <p><%= item.product.platform %> • Qty: <%= item.quantity %></p>
+          </div>
+          <span class="cart-item-price">₹<%= item.product.price * item.quantity %></span>
+          <button class="btn-remove" onclick="removeFromCart('<%= item.product._id %>')">🗑️</button>
+        </div>
+        <% } %>
+        <% }) %>
+      </div>
+      <div class="cart-summary">
+        <h3>Order Summary</h3>
+        <div class="summary-row"><span>Items (<%= items.length %>)</span><span>₹<%= total %></span></div>
+        <div class="summary-row"><span>Delivery</span><span style="color:#10b981">FREE</span></div>
+        <div class="summary-row"><span>Total</span><span>₹<%= total %></span></div>
+        <p style="font-size:13px;color:var(--text-muted);margin:16px 0">Each item is purchased separately. Click an item to go to its product page and buy.</p>
+        <a href="/" class="btn-auth" style="display:block;text-align:center;padding:12px">Continue Shopping</a>
+      </div>
+    </div>
+    <% } %>
+  </div>
+</section>
+<%- include('partials/footer') %>

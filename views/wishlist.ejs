@@ -1,0 +1,30 @@
+<%- include('partials/header', { title: 'Wishlist' }) %>
+<section class="wishlist-section">
+  <div class="container">
+    <h1 class="page-title">🤍 My Wishlist</h1>
+    <% if (!items || items.length === 0) { %>
+      <div class="empty-state"><div style="font-size:64px">🤍</div><h3>Your wishlist is empty</h3><p><a href="/">Browse the store</a> and add games you love</p></div>
+    <% } else { %>
+    <div class="products-grid">
+      <% items.forEach(product => { %>
+      <div class="product-card">
+        <div class="product-image" onclick="window.location='/product/<%= product._id %>'">
+          <img data-src="<%= product.image %>" src="/images/default-game.png" alt="<%= product.name %>">
+          <% if (product.badge) { %><span class="badge badge-<%= product.badge.toLowerCase() %>"><%= product.badge %></span><% } %>
+        </div>
+        <div class="product-info">
+          <div class="product-platform"><%= product.platform %></div>
+          <h3><%= product.name %></h3>
+          <div class="product-footer">
+            <span class="price">₹<%= product.price %></span>
+            <button class="btn-wishlist-overlay active" onclick="toggleWishlist('<%= product._id %>',this);this.closest('.product-card').remove();showToast('Removed from wishlist','info')">❤️</button>
+          </div>
+          <a href="/product/<%= product._id %>" class="btn-auth" style="display:block;text-align:center;margin-top:10px;padding:8px;font-size:13px">View Product</a>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+    <% } %>
+  </div>
+</section>
+<%- include('partials/footer') %>
